@@ -4,17 +4,17 @@ import 'package:rxdart/rxdart.dart';
 
 // 1. Notification
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-FlutterLocalNotificationsPlugin();
+    FlutterLocalNotificationsPlugin();
 
 // 2. Notification
 /// Streams are created so that app can respond to notification-related events
 /// since the plugin is initialised in the `main` function
 final BehaviorSubject<ReceivedNotification> didReceiveLocalNotificationSubject =
-BehaviorSubject<ReceivedNotification>();
+    BehaviorSubject<ReceivedNotification>();
 
 // 3. Notification
 final BehaviorSubject<String> selectNotificationSubject =
-BehaviorSubject<String>();
+    BehaviorSubject<String>();
 
 // 4. Notification
 class ReceivedNotification {
@@ -33,38 +33,37 @@ class ReceivedNotification {
 
 // 5. Notification
 Future<void> main() async {
-
   // 6. Notification
   WidgetsFlutterBinding.ensureInitialized();
 
   // 1. Notification7
   final NotificationAppLaunchDetails notificationAppLaunchDetails =
-  await flutterLocalNotificationsPlugin.getNotificationAppLaunchDetails();
+      await flutterLocalNotificationsPlugin.getNotificationAppLaunchDetails();
 
   // 7. Notification
   const AndroidInitializationSettings initializationSettingsAndroid =
-  AndroidInitializationSettings('@mipmap/ic_launcher');
+      AndroidInitializationSettings('@mipmap/ic_launcher');
 
   // 8. Notification
   /// Note: permissions aren't requested here just to demonstrate that can be
   /// done later
   final IOSInitializationSettings initializationSettingsIOS =
-  IOSInitializationSettings(
-      requestAlertPermission: false,
-      requestBadgePermission: false,
-      requestSoundPermission: false,
-      onDidReceiveLocalNotification:
-          (int id, String title, String body, String payload) async {
-        didReceiveLocalNotificationSubject.add(ReceivedNotification(
-            id: id, title: title, body: body, payload: payload));
-      });
+      IOSInitializationSettings(
+          requestAlertPermission: false,
+          requestBadgePermission: false,
+          requestSoundPermission: false,
+          onDidReceiveLocalNotification:
+              (int id, String title, String body, String payload) async {
+            didReceiveLocalNotificationSubject.add(ReceivedNotification(
+                id: id, title: title, body: body, payload: payload));
+          });
 
   // 9. Notification
   const MacOSInitializationSettings initializationSettingsMacOS =
-  MacOSInitializationSettings(
-      requestAlertPermission: false,
-      requestBadgePermission: false,
-      requestSoundPermission: false);
+      MacOSInitializationSettings(
+          requestAlertPermission: false,
+          requestBadgePermission: false,
+          requestSoundPermission: false);
 
   // 10. Notification
   final InitializationSettings initializationSettings = InitializationSettings(
@@ -75,11 +74,11 @@ Future<void> main() async {
   // 11. Notification
   await flutterLocalNotificationsPlugin.initialize(initializationSettings,
       onSelectNotification: (String payload) async {
-        if (payload != null) {
-          debugPrint('notification payload: $payload');
-        }
-        selectNotificationSubject.add(payload);
-      });
+    if (payload != null) {
+      debugPrint('notification payload: $payload');
+    }
+    selectNotificationSubject.add(payload);
+  });
 
   runApp(MyApp(notificationAppLaunchDetails));
 }
@@ -89,7 +88,8 @@ class MyApp extends StatefulWidget {
   final NotificationAppLaunchDetails notificationAppLaunchDetails;
 
   // 13. Notification
-  const MyApp(this.notificationAppLaunchDetails, {
+  const MyApp(
+    this.notificationAppLaunchDetails, {
     Key key,
   }) : super(key: key);
 
@@ -128,17 +128,31 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<void> _showNotification() async {
     const AndroidNotificationDetails androidNotificationSpecifics =
-    AndroidNotificationDetails(
-        'your channel id', 'your channel name', 'your channel description',
-        importance: Importance.max,
-        priority: Priority.high,
-        ticker: 'ticker');
+        AndroidNotificationDetails(
+            'your channel id', 'your channel name', 'your channel description',
+            importance: Importance.max,
+            priority: Priority.high,
+            ticker: 'ticker');
 
     const NotificationDetails notificationDetails =
-    NotificationDetails(android: androidNotificationSpecifics);
+        NotificationDetails(android: androidNotificationSpecifics);
 
-    await flutterLocalNotificationsPlugin.show(0, 'plain title', 'plain body', notificationDetails,
+    await flutterLocalNotificationsPlugin.show(
+        0, 'plain title', 'plain body', notificationDetails,
         payload: 'item x');
+  }
+
+  Future<void> _repeatNotification() async {
+    const AndroidNotificationDetails androidPlatformChannelSpecifics =
+        AndroidNotificationDetails('repeating channel id',
+            'repeating channel name', 'repeating description');
+
+    const NotificationDetails platformChannelSpecifics =
+        NotificationDetails(android: androidPlatformChannelSpecifics);
+
+    await flutterLocalNotificationsPlugin.periodicallyShow(0, 'repeating title',
+        'repeating body', RepeatInterval.everyMinute, platformChannelSpecifics,
+        androidAllowWhileIdle: true);
   }
 
   @override
@@ -156,11 +170,14 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             Text(
               '$_counter',
-              style: Theme
-                  .of(context)
-                  .textTheme
-                  .headline4,
+              style: Theme.of(context).textTheme.headline4,
             ),
+            RaisedButton(
+                child: Text('Show notification every minute',
+                    style: TextStyle(fontSize: 20)),
+                onPressed: () async {
+                  await _repeatNotification();
+                })
           ],
         ),
       ),
